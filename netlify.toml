@@ -57,7 +57,9 @@
 
 # 函数配置
 [functions]
-  # 函数超时时间
-  timeout = 30
+  # 函数超时时间配置
+  [functions.timeout]
+    external_node_modules = []
+  
   # 内存限制
   memory = 1024
