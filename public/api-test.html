@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试 - WanxingApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 WanxingApp API 测试工具</h1>
+    <p>这个页面用于测试Netlify Functions API是否正常工作</p>
+
+    <div class="test-section">
+        <h2>1. 测试链接列表获取</h2>
+        <button class="test-button" onclick="testGetLinks()">测试 GET /api/links</button>
+        <div id="get-links-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 测试管理员登录</h2>
+        <div>
+            <input type="text" id="test-username" placeholder="用户名" value="admin" style="margin: 5px; padding: 8px;">
+            <input type="password" id="test-password" placeholder="密码" value="admin123" style="margin: 5px; padding: 8px;">
+        </div>
+        <button class="test-button" onclick="testLogin()">测试 POST /api/login</button>
+        <div id="login-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 测试添加链接</h2>
+        <div>
+            <input type="text" id="test-link-name" placeholder="链接名称" value="测试链接" style="margin: 5px; padding: 8px; width: 200px;">
+            <input type="text" id="test-link-url" placeholder="链接URL" value="https://example.com" style="margin: 5px; padding: 8px; width: 300px;">
+            <input type="text" id="test-link-image" placeholder="图片URL (可选)" style="margin: 5px; padding: 8px; width: 300px;">
+        </div>
+        <button class="test-button" onclick="testAddLink()">测试 POST /api/links</button>
+        <div id="add-link-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 测试删除链接</h2>
+        <div>
+            <input type="text" id="test-link-id" placeholder="链接ID" style="margin: 5px; padding: 8px;">
+        </div>
+        <button class="test-button" onclick="testDeleteLink()">测试 DELETE /api/links/{id}</button>
+        <div id="delete-link-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. 完整流程测试</h2>
+        <button class="test-button" onclick="runFullTest()">运行完整测试流程</button>
+        <div id="full-test-result" class="result"></div>
+    </div>
+
+    <script>
+        function showResult(elementId, content, type = '') {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.className = 'result ' + type;
+        }
+
+        function showLoading(elementId, message) {
+            showResult(elementId, message + '...', 'loading');
+        }
+
+        // 测试获取链接列表
+        async function testGetLinks() {
+            showLoading('get-links-result', '正在获取链接列表...');
+            
+            try {
+                const response = await fetch('/api/links');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('get-links-result', 
+                        `✅ 成功获取 ${data.length} 个链接\n\n` + 
+                        JSON.stringify(data, null, 2), 'success');
+                } else {
+                    showResult('get-links-result', 
+                        `❌ 获取失败: ${response.status}\n\n` + 
+                        JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('get-links-result', 
+                    `❌ 请求失败: ${error.message}\n\n` +
+                    '可能的原因:\n' +
+                    '- API端点配置错误\n' +
+                    '- Netlify Functions未正确部署\n' +
+                    '- 网络连接问题', 'error');
+            }
+        }
+
+        // 测试管理员登录
+        async function testLogin() {
+            const username = document.getElementById('test-username').value;
+            const password = document.getElementById('test-password').value;
+            
+            showLoading('login-result', '正在尝试登录...');
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showResult('login-result', 
+                        `✅ 登录成功!\n\n` + 
+                        JSON.stringify(data, null, 2), 'success');
+                } else {
+                    showResult('login-result', 
+                        `❌ 登录失败: ${response.status}\n\n` + 
+                        JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('login-result', 
+                    `❌ 登录请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试添加链接
+        async function testAddLink() {
+            const name = document.getElementById('test-link-name').value;
+            const url = document.getElementById('test-link-url').value;
+            const image = document.getElementById('test-link-image').value;
+            
+            if (!name || !url) {
+                alert('请填写链接名称和URL');
+                return;
+            }
+            
+            showLoading('add-link-result', '正在添加链接...');
+            
+            try {
+                const response = await fetch('/api/links', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, url, image })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('add-link-result', 
+                        `✅ 链接添加成功!\n\n` + 
+                        JSON.stringify(data, null, 2), 'success');
+                } else {
+                    showResult('add-link-result', 
+                        `❌ 添加失败: ${response.status}\n\n` + 
+                        JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('add-link-result', 
+                    `❌ 添加请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试删除链接
+        async function testDeleteLink() {
+            const linkId = document.getElementById('test-link-id').value;
+            
+            if (!linkId) {
+                alert('请输入要删除的链接ID');
+                return;
+            }
+            
+            if (!confirm(`确定要删除ID为 "${linkId}" 的链接吗？`)) {
+                return;
+            }
+            
+            showLoading('delete-link-result', '正在删除链接...');
+            
+            try {
+                const response = await fetch(`/api/links/${linkId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('delete-link-result', 
+                        `✅ 链接删除成功!\n\n` + 
+                        JSON.stringify(data, null, 2), 'success');
+                } else {
+                    showResult('delete-link-result', 
+                        `❌ 删除失败: ${response.status}\n\n` + 
+                        JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                showResult('delete-link-result', 
+                    `❌ 删除请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 运行完整测试流程
+        async function runFullTest() {
+            showLoading('full-test-result', '正在运行完整测试流程...');
+            
+            let results = [];
+            let hasErrors = false;
+            
+            // 测试1: 获取链接列表
+            try {
+                const response = await fetch('/api/links');
+                const data = await response.json();
+                results.push(`✅ 获取链接列表: ${response.status} (${data.length} 个链接)`);
+            } catch (error) {
+                results.push(`❌ 获取链接列表: ${error.message}`);
+                hasErrors = true;
+            }
+            
+            // 测试2: 管理员登录
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+                const data = await response.json();
+                results.push(`✅ 管理员登录: ${response.status}`);
+            } catch (error) {
+                results.push(`❌ 管理员登录: ${error.message}`);
+                hasErrors = true;
+            }
+            
+            // 测试3: 添加测试链接
+            try {
+                const response = await fetch('/api/links', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name: '测试链接', 
+                        url: 'https://example.com',
+                        image: 'https://via.placeholder.com/250x150?text=Test' 
+                    })
+                });
+                const data = await response.json();
+                results.push(`✅ 添加链接: ${response.status}`);
+            } catch (error) {
+                results.push(`❌ 添加链接: ${error.message}`);
+                hasErrors = true;
+            }
+            
+            // 显示结果
+            const finalResult = results.join('\n') + '\n\n' + 
+                (hasErrors ? '⚠️ 发现错误，请检查配置' : '✅ 所有测试通过！');
+            
+            showResult('full-test-result', finalResult, hasErrors ? 'error' : 'success');
+        }
+
+        // 页面加载时自动运行基本测试
+        window.addEventListener('DOMContentLoaded', () => {
+            testGetLinks();
+        });
+    </script>
+</body>
+</html>

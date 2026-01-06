@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API调试工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .result {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            color: #d32f2f;
+            background: #ffebee;
+        }
+        .success {
+            color: #388e3c;
+            background: #e8f5e8;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>API调试工具</h1>
+    
+    <div class="debug-section">
+        <h2>测试链接API</h2>
+        <button onclick="testGetLinks()">测试 GET /api/links</button>
+        <button onclick="testAddLink()">测试 POST /api/links</button>
+        <div id="links-result" class="result">等待测试...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>测试登录API</h2>
+        <input type="text" id="test-username" placeholder="用户名" value="admin">
+        <input type="password" id="test-password" placeholder="密码" value="admin123">
+        <button onclick="testLogin()">测试 POST /api/login</button>
+        <div id="login-result" class="result">等待测试...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>系统信息</h2>
+        <button onclick="showSystemInfo()">显示系统信息</button>
+        <div id="system-result" class="result">点击按钮显示系统信息</div>
+    </div>
+
+    <script>
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            element.className = 'result ' + (isError ? 'error' : 'success');
+        }
+        
+        function showError(elementId, error) {
+            const element = document.getElementById(elementId);
+            element.textContent = '错误: ' + error.message;
+            element.className = 'result error';
+        }
+        
+        async function testGetLinks() {
+            try {
+                showResult('links-result', '正在请求 /api/links...');
+                
+                const response = await fetch('/api/links', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const responseText = await response.text();
+                
+                let result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: responseText
+                };
+                
+                // 尝试解析JSON
+                try {
+                    result.parsedBody = JSON.parse(responseText);
+                } catch (e) {
+                    result.parseError = '响应不是有效的JSON: ' + e.message;
+                }
+                
+                showResult('links-result', result, !response.ok);
+                
+            } catch (error) {
+                showError('links-result', error);
+            }
+        }
+        
+        async function testAddLink() {
+            try {
+                showResult('links-result', '正在发送 POST /api/links...');
+                
+                const testData = {
+                    name: '测试链接 ' + new Date().toLocaleTimeString(),
+                    url: 'https://example.com',
+                    image: 'https://via.placeholder.com/250x150?text=Test'
+                };
+                
+                const response = await fetch('/api/links', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const responseText = await response.text();
+                
+                let result = {
+                    requestData: testData,
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: responseText
+                };
+                
+                // 尝试解析JSON
+                try {
+                    result.parsedBody = JSON.parse(responseText);
+                } catch (e) {
+                    result.parseError = '响应不是有效的JSON: ' + e.message;
+                }
+                
+                showResult('links-result', result, !response.ok);
+                
+            } catch (error) {
+                showError('links-result', error);
+            }
+        }
+        
+        async function testLogin() {
+            try {
+                const username = document.getElementById('test-username').value;
+                const password = document.getElementById('test-password').value;
+                
+                showResult('login-result', '正在发送 POST /api/login...');
+                
+                const loginData = { username, password };
+                
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                const responseText = await response.text();
+                
+                let result = {
+                    requestData: loginData,
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: responseText
+                };
+                
+                // 尝试解析JSON
+                try {
+                    result.parsedBody = JSON.parse(responseText);
+                } catch (e) {
+                    result.parseError = '响应不是有效的JSON: ' + e.message;
+                }
+                
+                showResult('login-result', result, !response.ok);
+                
+            } catch (error) {
+                showError('login-result', error);
+            }
+        }
+        
+        function showSystemInfo() {
+            const info = {
+                currentTime: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                location: {
+                    href: window.location.href,
+                    origin: window.location.origin,
+                    pathname: window.location.pathname
+                },
+                screen: {
+                    width: screen.width,
+                    height: screen.height,
+                    colorDepth: screen.colorDepth
+                },
+                window: {
+                    innerWidth: window.innerWidth,
+                    innerHeight: window.innerHeight
+                },
+                cookies: document.cookie,
+                localStorage: Object.keys(localStorage),
+                sessionStorage: Object.keys(sessionStorage)
+            };
+            
+            showResult('system-result', info);
+        }
+        
+        // 页面加载时自动测试
+        window.addEventListener('load', () => {
+            console.log('API调试工具已加载');
+            console.log('当前域名:', window.location.origin);
+            console.log('API基础路径:', '/api/');
+        });
+    </script>
+</body>
+</html>

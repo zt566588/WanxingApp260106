@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .info {
+            color: blue;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 管理员登录流程测试</h1>
+        
+        <div class="test-section">
+            <h3>测试1: 正确凭据登录</h3>
+            <p>测试用户名: <strong>admin</strong></p>
+            <p>测试密码: <strong>admin123</strong></p>
+            <button onclick="testValidLogin()">测试正确登录</button>
+            <div id="valid-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试2: 错误凭据登录</h3>
+            <p>测试用户名: <strong>wronguser</strong></p>
+            <p>测试密码: <strong>wrongpass</strong></p>
+            <button onclick="testInvalidLogin()">测试错误登录</button>
+            <div id="invalid-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试3: 空凭据登录</h3>
+            <button onclick="testEmptyLogin()">测试空凭据</button>
+            <div id="empty-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试4: 获取链接列表（需要认证）</h3>
+            <button onclick="testGetLinks()">测试获取链接</button>
+            <div id="links-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>测试5: 添加链接（需要认证）</h3>
+            <button onclick="testAddLink()">测试添加链接</button>
+            <div id="add-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+        let authToken = null;
+
+        async function testValidLogin() {
+            const resultDiv = document.getElementById('valid-result');
+            resultDiv.innerHTML = '测试中...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin123' })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    resultDiv.innerHTML = `<span class="success">✅ 登录成功！</span>\nToken: ${data.token}`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ 登录失败: ${data.error || '未知错误'}</span>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ 请求失败: ${err.message}</span>`;
+            }
+        }
+
+        async function testInvalidLogin() {
+            const resultDiv = document.getElementById('invalid-result');
+            resultDiv.innerHTML = '测试中...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'wronguser', password: 'wrongpass' })
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 401) {
+                    resultDiv.innerHTML = `<span class="success">✅ 正确拒绝无效凭据</span>\n错误信息: ${data.error}`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ 预期401错误，但得到: ${response.status}</span>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ 请求失败: ${err.message}</span>`;
+            }
+        }
+
+        async function testEmptyLogin() {
+            const resultDiv = document.getElementById('empty-result');
+            resultDiv.innerHTML = '测试中...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: '', password: '' })
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 400) {
+                    resultDiv.innerHTML = `<span class="success">✅ 正确验证空凭据</span>\n错误信息: ${data.error}`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ 预期400错误，但得到: ${response.status}</span>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ 请求失败: ${err.message}</span>`;
+            }
+        }
+
+        async function testGetLinks() {
+            const resultDiv = document.getElementById('links-result');
+            resultDiv.innerHTML = '测试中...';
+            
+            if (!authToken) {
+                resultDiv.innerHTML = `<span class="error">❌ 请先进行有效登录获取token</span>`;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/links`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ 成功获取链接列表</span>\n链接数量: ${data.length}`;
+                } else if (response.status === 401) {
+                    resultDiv.innerHTML = `<span class="error">❌ 认证失败，token可能无效</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ 请求失败: ${response.status}</span>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ 请求失败: ${err.message}</span>`;
+            }
+        }
+
+        async function testAddLink() {
+            const resultDiv = document.getElementById('add-result');
+            resultDiv.innerHTML = '测试中...';
+            
+            if (!authToken) {
+                resultDiv.innerHTML = `<span class="error">❌ 请先进行有效登录获取token</span>`;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/links`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        name: '测试链接',
+                        url: 'https://example.com',
+                        image: 'https://via.placeholder.com/250x150'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<span class="success">✅ 成功添加链接</span>\n链接ID: ${data.id}`;
+                } else if (response.status === 401) {
+                    resultDiv.innerHTML = `<span class="error">❌ 认证失败，token可能无效</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">❌ 添加失败: ${data.error || response.status}</span>`;
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<span class="error">❌ 请求失败: ${err.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destiny2-WanxingApp</title>
+    <meta name="description" content="具有星空背景效果的未来科技风格网站导航系统">
+    <style>
+        :root{--primary-hue:195;--secondary-hue:270;--accent-hue:45;--color-bg:hsl(240,40%,5%);--color-bg-secondary:hsl(240,35%,8%);--color-bg-glass:hsla(240,30%,12%,0.7);--color-primary:hsl(var(--primary-hue),100%,50%);--color-primary-glow:hsl(var(--primary-hue),100%,70%);--color-secondary:hsl(var(--secondary-hue),80%,60%);--color-accent:hsl(var(--accent-hue),100%,50%);--color-text:hsl(var(--primary-hue),100%,85%);--color-text-dim:hsl(var(--primary-hue),100%,60%);--color-text-muted:hsl(var(--primary-hue),50%,40%);--shadow-glow:0 0 20px hsl(var(--primary-hue),100%,50%,0.3);--shadow-glow-strong:0 0 40px hsl(var(--primary-hue),100%,50%,0.5);--shadow-card:0 10px 30px hsla(240,50%,0%,0.5);--gradient-primary:linear-gradient(135deg,hsl(var(--primary-hue),100%,50%),hsl(var(--secondary-hue),80%,60%));--gradient-bg:radial-gradient(ellipse at center,hsl(240,40%,8%) 0%,hsl(240,50%,3%) 100%);--transition-smooth:all 0.3s cubic-bezier(0.4,0,0.2,1);--transition-bounce:all 0.4s cubic-bezier(0.68,-0.55,0.265,1.55)}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--gradient-bg);color:var(--color-text);font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;overflow:hidden;height:100vh;position:relative}
+        #stars-container{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;background:var(--gradient-bg)}
+        .star{position:absolute;width:2px;height:2px;background:var(--color-primary);border-radius:50%;transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);box-shadow:0 0 6px var(--color-primary-glow);animation:twinkle 3s infinite alternate}
+        @keyframes twinkle{0%{opacity:0.3;transform:scale(0.8)}100%{opacity:1;transform:scale(1.2)}}
+        .main-container{display:block;padding:20px;height:100vh;overflow-y:auto}
+        .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;padding:20px 0;border-bottom:1px solid hsla(var(--primary-hue),100%,50%,0.2);backdrop-filter:blur(10px)}
+        .header h1{font-size:2.5rem;font-weight:300;letter-spacing:2px;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:var(--shadow-glow)}
+        .admin-btn{background:var(--color-bg-glass);color:var(--color-text);border:1px solid var(--color-primary);padding:12px 24px;border-radius:25px;cursor:pointer;transition:var(--transition-smooth);backdrop-filter:blur(10px);font-weight:500;letter-spacing:1px}
+        .admin-btn:hover{background:hsla(var(--primary-hue),100%,50%,0.2);box-shadow:var(--shadow-glow);transform:translateY(-2px)}
+        .links-container{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:30px;padding:20px 0}
+        .link-item{background:var(--color-bg-glass);border-radius:15px;overflow:hidden;transition:var(--transition-bounce);border:1px solid hsla(var(--primary-hue),100%,50%,0.2);backdrop-filter:blur(10px)}
+        .link-item:hover{transform:translateY(-10px) scale(1.02);box-shadow:var(--shadow-card),var(--shadow-glow-strong);border-color:var(--color-primary)}
+        .link-preview{height:180px;background:linear-gradient(45deg,var(--color-bg-secondary),hsl(240,30%,15%));position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+        .link-preview img{width:100%;height:100%;object-fit:cover;transition:var(--transition-smooth)}
+        .link-item:hover .link-preview img{transform:scale(1.1)}
+        .link-info{padding:25px}
+        .link-info h3{margin-bottom:15px;font-size:1.3rem;font-weight:500;color:var(--color-text)}
+        .link-info a{display:inline-block;background:var(--gradient-primary);color:var(--color-bg);padding:10px 20px;border-radius:20px;text-decoration:none;font-weight:600;transition:var(--transition-smooth);border:2px solid transparent}
+        .link-info a:hover{background:transparent;color:var(--color-primary);border-color:var(--color-primary);box-shadow:var(--shadow-glow)}
+        .admin-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:hsla(240,50%,0%,0.8);z-index:1000;justify-content:center;align-items:center;backdrop-filter:blur(5px)}
+        .admin-modal-content{background:var(--color-bg-glass);padding:40px;border-radius:20px;box-shadow:var(--shadow-card),var(--shadow-glow);width:400px;border:1px solid hsla(var(--primary-hue),100%,50%,0.3);backdrop-filter:blur(20px)}
+        .admin-modal-content h2{margin-bottom:30px;text-align:center;font-size:1.8rem;font-weight:300;color:var(--color-primary);text-shadow:var(--shadow-glow)}
+        .form-group{margin-bottom:25px}
+        .form-group label{display:block;margin-bottom:8px;color:var(--color-text-dim);font-weight:500}
+        .form-group input{width:100%;padding:15px;background:hsla(240,30%,15%,0.5);border:1px solid hsla(var(--primary-hue),100%,50%,0.3);border-radius:10px;color:var(--color-text);font-size:1rem;transition:var(--transition-smooth)}
+        .form-group input:focus{outline:none;border-color:var(--color-primary);box-shadow:var(--shadow-glow)}
+        .form-row{display:flex;gap:15px;margin-top:30px}
+        .login-btn,.cancel-btn{flex:1;padding:15px;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;transition:var(--transition-smooth)}
+        .login-btn{background:var(--gradient-primary);color:var(--color-bg)}
+        .login-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-glow)}
+        .cancel-btn{background:transparent;color:var(--color-text-dim);border:1px solid hsla(var(--primary-hue),100%,50%,0.3)}
+        .cancel-btn:hover{background:hsla(var(--primary-hue),100%,50%,0.1);color:var(--color-text)}
+        .admin-container{display:none;padding:20px;height:100vh;overflow-y:auto}
+        .admin-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;padding:20px 0;border-bottom:1px solid hsla(var(--primary-hue),100%,50%,0.2);backdrop-filter:blur(10px)}
+        .admin-header h1{font-size:2.2rem;font-weight:300;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .back-btn{background:var(--color-bg-glass);color:var(--color-text);border:1px solid var(--color-secondary);padding:12px 24px;border-radius:25px;cursor:pointer;transition:var(--transition-smooth);backdrop-filter:blur(10px)}
+        .back-btn:hover{background:hsla(var(--secondary-hue),80%,60%,0.2);box-shadow:0 0 20px hsla(var(--secondary-hue),80%,60%,0.3)}
+        .admin-form{background:var(--color-bg-glass);padding:30px;border-radius:20px;margin-bottom:40px;border:1px solid hsla(var(--primary-hue),100%,50%,0.2);backdrop-filter:blur(10px)}
+        .admin-form h2{margin-bottom:25px;color:var(--color-primary);font-weight:500;text-shadow:var(--shadow-glow)}
+        #add-link-btn{background:var(--gradient-primary);color:var(--color-bg);border:none;padding:15px 25px;border-radius:10px;cursor:pointer;font-weight:600;transition:var(--transition-smooth)}
+        #add-link-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-glow)}
+        .admin-links{display:grid;gap:20px}
+        .admin-link-item{background:var(--color-bg-glass);border-radius:15px;padding:25px;border:1px solid hsla(var(--primary-hue),100%,50%,0.2);display:flex;justify-content:space-between;align-items:center;transition:var(--transition-smooth);backdrop-filter:blur(10px)}
+        .admin-link-item:hover{border-color:var(--color-primary);box-shadow:var(--shadow-glow)}
+        .admin-link-info h3{color:var(--color-primary);margin-bottom:8px;font-size:1.2rem}
+        .admin-link-info p{color:var(--color-text-dim);font-size:0.9rem;word-break:break-all}
+        .admin-link-actions button{background:hsla(0,70%,50%,0.2);color:hsl(0,70%,70%);border:1px solid hsla(0,70%,50%,0.5);padding:8px 16px;border-radius:8px;cursor:pointer;transition:var(--transition-smooth);font-weight:500}
+        .admin-link-actions button:hover{background:hsla(0,70%,50%,0.3);box-shadow:0 0 10px hsla(0,70%,50%,0.3)}
+        @media (max-width:768px){.header{flex-direction:column;gap:20px;text-align:center}.header h1{font-size:2rem}.links-container{grid-template-columns:1fr;gap:20px}.admin-modal-content{width:90%;max-width:400px}.form-row{flex-direction:column}.admin-link-item{flex-direction:column;gap:15px;text-align:center}}
+        .loading{display:inline-block;width:20px;height:20px;border:2px solid var(--color-primary);border-radius:50%;border-top-color:transparent;animation:spin 1s ease-in-out infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+    <div id="stars-container"></div>
+    <div class="main-container" id="main-container">
+        <header class="header">
+            <h1>Destiny2-WanxingApp</h1>
+            <button class="admin-btn" id="admin-btn">管理员入口</button>
+        </header>
+        <main class="links-container" id="links-container"></main>
+    </div>
+    <div class="admin-modal" id="admin-modal">
+        <div class="admin-modal-content">
+            <h2>管理员登录</h2>
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" placeholder="输入管理员用户名">
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" placeholder="输入管理员密码">
+            </div>
+            <div class="form-row">
+                <button class="login-btn" id="modal-login-btn">登录</button>
+                <button class="cancel-btn" id="modal-cancel-btn">取消</button>
+            </div>
+        </div>
+    </div>
+    <div class="admin-container" id="admin-container">
+        <header class="admin-header">
+            <h1>链接管理</h1>
+            <button class="back-btn" id="back-btn">返回主界面</button>
+        </header>
+        <section class="admin-form">
+            <h2>添加新链接</h2>
+            <div class="form-row">
+                <input type="text" id="link-name" placeholder="链接名称">
+                <input type="text" id="link-url" placeholder="链接URL">
+            </div>
+            <div class="form-row">
+                <input type="text" id="link-image" placeholder="预览图URL (可选)">
+                <button id="add-link-btn">添加链接</button>
+            </div>
+        </section>
+        <section class="admin-links" id="admin-links"></section>
+    </div>
+    <script>
+        !function(){const e=document.getElementById("stars-container");for(let t=0;t<150;t++){const t=document.createElement("div");t.className="star",t.style.left=`${Math.random()*100}%`,t.style.top=`${Math.random()*100}%`;const n=Math.random()*3+1;t.style.width=`${n}px`,t.style.height=`${n}px`,t.style.opacity=Math.random()*.8+.2,t.style.animationDelay=`${Math.random()*3}s`,e.appendChild(t)}document.addEventListener("mousemove",(t=>{const n=t.clientX,o=t.clientY;document.querySelectorAll(".star").forEach((e=>{const t=e.getBoundingClientRect(),s=t.left+t.width/2,i=t.top+t.height/2,a=Math.sqrt(Math.pow(n-s,2)+Math.pow(o-i,2));a<250?(e.style.transform=`translate(${(n-s)*.08}px,${(o-i)*.08}px) scale(1.5)`,e.style.opacity="1"):(e.style.transform="translate(0, 0) scale(1)",e.style.opacity="")}))}))}();
+        
+        const API_BASE = '/api';
+        const TOKEN_KEY = 'auth_token';
+        
+        function getAuthHeaders() {
+            const token = localStorage.getItem(TOKEN_KEY);
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : ''
+            };
+        }
+        
+        function showAdminLogin() {
+            document.getElementById('admin-modal').style.display = 'flex';
+        }
+        
+        function hideAdminLogin() {
+            document.getElementById('admin-modal').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+        
+        document.getElementById('modal-login-btn').addEventListener('click', async () => {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+            
+            if (username.length > 20 || password.length > 50) {
+                alert('输入过长');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    localStorage.setItem(TOKEN_KEY, data.token);
+                    hideAdminLogin();
+                    document.getElementById('main-container').style.display = 'none';
+                    document.getElementById('admin-container').style.display = 'block';
+                    loadAdminLinks();
+                } else {
+                    alert('登录失败: ' + (data.error || '用户名或密码错误'));
+                }
+            } catch (err) {
+                alert('登录请求失败');
+            }
+        });
+        
+        document.getElementById('modal-cancel-btn').addEventListener('click', hideAdminLogin);
+        document.getElementById('admin-btn').addEventListener('click', showAdminLogin);
+        document.getElementById('back-btn').addEventListener('click', () => {
+            document.getElementById('admin-container').style.display = 'none';
+            document.getElementById('main-container').style.display = 'block';
+            loadLinks();
+        });
+        
+        async function loadLinks() {
+            try {
+                const response = await fetch(`${API_BASE}/links`);
+                if (!response.ok) throw new Error('加载失败');
+                
+                const links = await response.json();
+                const container = document.getElementById('links-container');
+                container.innerHTML = '';
+                
+                if (links.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:50px;color:var(--color-text-dim)">暂无链接</div>';
+                    return;
+                }
+                
+                links.forEach(link => {
+                    const item = document.createElement('div');
+                    item.className = 'link-item';
+                    item.innerHTML = `
+                        <div class="link-preview">
+                            <img src="${link.image}" alt="${link.name}" onerror="this.src='https://via.placeholder.com/250x150?text=No+Preview'">
+                        </div>
+                        <div class="link-info">
+                            <h3>${link.name}</h3>
+                            <a href="${link.url}" target="_blank" rel="noopener noreferrer">访问网站</a>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            } catch (err) {
+                document.getElementById('links-container').innerHTML = '<div style="text-align:center;padding:50px;color:hsl(0,70%,60%)">加载失败</div>';
+            }
+        }
+        
+        async function loadAdminLinks() {
+            try {
+                const response = await fetch(`${API_BASE}/links`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.status === 401) {
+                    localStorage.removeItem(TOKEN_KEY);
+                    document.getElementById('admin-container').style.display = 'none';
+                    document.getElementById('main-container').style.display = 'block';
+                    showAdminLogin();
+                    return;
+                }
+                
+                if (!response.ok) throw new Error('加载失败');
+                
+                const links = await response.json();
+                const container = document.getElementById('admin-links');
+                container.innerHTML = '';
+                
+                if (links.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--color-text-dim)">暂无链接</div>';
+                    return;
+                }
+                
+                links.forEach(link => {
+                    const item = document.createElement('div');
+                    item.className = 'admin-link-item';
+                    item.innerHTML = `
+                        <div class="admin-link-info">
+                            <h3>${link.name}</h3>
+                            <p>${link.url}</p>
+                        </div>
+                        <div class="admin-link-actions">
+                            <button onclick="deleteLink('${link.id}')">删除</button>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            } catch (err) {
+                document.getElementById('admin-links').innerHTML = '<div style="text-align:center;padding:30px;color:hsl(0,70%,60%)">加载失败</div>';
+            }
+        }
+        
+        document.getElementById('add-link-btn').addEventListener('click', async () => {
+            const name = document.getElementById('link-name').value.trim();
+            const url = document.getElementById('link-url').value.trim();
+            const image = document.getElementById('link-image').value.trim();
+            
+            if (!name || !url) {
+                alert('请填写链接名称和URL');
+                return;
+            }
+            
+            if (name.length > 50 || url.length > 200) {
+                alert('输入过长');
+                return;
+            }
+            
+            try {
+                new URL(url);
+            } catch {
+                alert('无效的URL格式');
+                return;
+            }
+            
+            if (image) {
+                try {
+                    new URL(image);
+                } catch {
+                    alert('无效的图片URL');
+                    return;
+                }
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/links`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ name, url, image })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('link-name').value = '';
+                    document.getElementById('link-url').value = '';
+                    document.getElementById('link-image').value = '';
+                    loadAdminLinks();
+                    alert('链接添加成功！');
+                } else if (response.status === 401) {
+                    localStorage.removeItem(TOKEN_KEY);
+                    showAdminLogin();
+                } else {
+                    alert('添加失败');
+                }
+            } catch (err) {
+                alert('请求失败');
+            }
+        });
+        
+        window.deleteLink = async function(id) {
+            if (confirm('确定要删除这个链接吗？')) {
+                try {
+                    const response = await fetch(`${API_BASE}/links/${id}`, {
+                        method: 'DELETE',
+                        headers: getAuthHeaders()
+                    });
+                    
+                    if (response.ok) {
+                        loadAdminLinks();
+                        alert('链接删除成功！');
+                    } else if (response.status === 401) {
+                        localStorage.removeItem(TOKEN_KEY);
+                        showAdminLogin();
+                    } else {
+                        alert('删除失败');
+                    }
+                } catch (err) {
+                    alert('请求失败');
+                }
+            }
+        };
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            loadLinks();
+        });
+        
+        document.getElementById('admin-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'admin-modal') hideAdminLogin();
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') hideAdminLogin();
+        });
+    </script>
+</body>
+</html>
