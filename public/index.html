@@ -164,10 +164,50 @@
             height: 100%;
             object-fit: cover;
             transition: var(--transition-smooth);
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out forwards;
         }
 
         .link-item:hover .link-preview img {
             transform: scale(1.1);
+        }
+
+        /* 图片加载动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 图片错误状态 */
+        .link-preview img[data-error="true"] {
+            filter: grayscale(100%);
+            opacity: 0.7;
+        }
+
+        /* 加载中的占位效果 */
+        .link-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                hsla(240, 30%, 15%, 0.8) 25%, 
+                hsla(240, 30%, 20%, 0.8) 50%, 
+                hsla(240, 30%, 15%, 0.8) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            z-index: 1;
+        }
+
+        .link-preview img.loaded ~ ::before {
+            display: none;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
         .link-info {
@@ -671,17 +711,33 @@
                     const linkItem = document.createElement('div');
                     linkItem.className = 'link-item';
                     
-                    // 处理图片URL，避免使用Base64编码
+                    // 增强的图片URL处理逻辑
                     let imageUrl = link.image;
-                    if (imageUrl && imageUrl.startsWith('data:')) {
+                    
+                    // 验证图片URL
+                    if (!imageUrl || imageUrl.trim() === '') {
                         imageUrl = 'https://via.placeholder.com/250x150?text=No+Preview';
-                    } else if (!imageUrl) {
-                        imageUrl = 'https://via.placeholder.com/250x150?text=No+Preview';
+                    } else if (imageUrl.startsWith('data:')) {
+                        // ⚠️ Base64图片已被系统禁用
+                        // 原因：性能差、安全性低、无法缓存、难以维护
+                        // 解决方案：请使用以下方式之一：
+                        // 1. 上传到图床服务（如imgur.com、sm.ms）
+                        // 2. 使用CDN链接（如https://cdn.example.com/image.jpg）
+                        // 3. 使用占位图服务（如via.placeholder.com）
+                        imageUrl = 'https://via.placeholder.com/250x150?text=Base64+Blocked';
+                        console.warn('⚠️ Base64图片已被禁用，请使用外部图片链接');
+                    } else if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+                        // 不是有效的HTTP(S) URL，添加协议
+                        imageUrl = 'https://' + imageUrl;
                     }
                     
                     linkItem.innerHTML = `
                         <div class="link-preview">
-                            <img src="${imageUrl}" alt="${link.name}" onerror="this.src='https://via.placeholder.com/250x150?text=No+Preview'">
+                            <img src="${imageUrl}" 
+                                 alt="${link.name}" 
+                                 onerror="handleImageError(this)"
+                                 onload="handleImageLoad(this)"
+                                 loading="lazy">
                         </div>
                         <div class="link-info">
                             <h3>${link.name}</h3>
@@ -799,6 +855,19 @@
                 }
             }
         };
+
+        // 图片错误处理函数
+        function handleImageError(img) {
+            console.warn('图片加载失败:', img.src);
+            img.src = 'https://via.placeholder.com/250x150?text=Image+Error';
+            img.alt = '图片加载失败';
+        }
+
+        // 图片加载成功处理函数
+        function handleImageLoad(img) {
+            console.log('图片加载成功:', img.src);
+            // 可以在这里添加加载动画或其他视觉效果
+        }
 
         // 初始化
         function init() {
