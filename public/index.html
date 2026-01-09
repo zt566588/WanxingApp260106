@@ -164,10 +164,50 @@
             height: 100%;
             object-fit: cover;
             transition: var(--transition-smooth);
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out forwards;
         }
 
         .link-item:hover .link-preview img {
             transform: scale(1.1);
+        }
+
+        /* 图片加载动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 图片错误状态 */
+        .link-preview img[data-error="true"] {
+            filter: grayscale(100%);
+            opacity: 0.7;
+        }
+
+        /* 加载中的占位效果 */
+        .link-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                hsla(240, 30%, 15%, 0.8) 25%, 
+                hsla(240, 30%, 20%, 0.8) 50%, 
+                hsla(240, 30%, 15%, 0.8) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            z-index: 1;
+        }
+
+        .link-preview img.loaded ~ ::before {
+            display: none;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
         .link-info {
@@ -352,6 +392,49 @@
             backdrop-filter: blur(10px);
         }
 
+        .base64-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            background: hsla(240, 30%, 15%, 0.5);
+            border: 1px solid hsla(var(--primary-hue), 100%, 50%, 0.3);
+            border-radius: 10px;
+            color: var(--color-text);
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            transition: var(--transition-smooth);
+        }
+
+        .base64-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .input-hint {
+            font-size: 0.8rem;
+            color: var(--color-text-dim);
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        .preview-container {
+            margin-top: 15px;
+            padding: 15px;
+            background: hsla(240, 30%, 15%, 0.3);
+            border-radius: 10px;
+            border: 1px solid hsla(var(--primary-hue), 100%, 50%, 0.2);
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto;
+        }
+
         .admin-form h2 {
             margin-bottom: 25px;
             color: var(--color-primary);
@@ -525,6 +608,21 @@
                 <input type="text" id="link-image" placeholder="预览图URL (可选)">
                 <button id="add-link-btn">添加链接</button>
             </div>
+            <div class="form-group" style="margin-top: 20px;">
+                <label style="color: var(--color-text-dim); font-size: 0.9rem; margin-bottom: 10px; display: block;">
+                    或者粘贴Base64图片数据（可选）
+                </label>
+                <textarea 
+                    id="link-image-base64" 
+                    class="base64-input" 
+                    placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA... 粘贴Base64图片数据"
+                    rows="3"
+                ></textarea>
+                <div class="input-hint">支持 data:image/ 开头的Base64格式，或普通图片URL</div>
+                <div id="image-preview" class="preview-container" style="display: none;">
+                    <img id="preview-img" class="preview-image" alt="预览图片">
+                </div>
+            </div>
         </section>
         
         <section class="admin-links" id="admin-links">
@@ -671,17 +769,24 @@
                     const linkItem = document.createElement('div');
                     linkItem.className = 'link-item';
                     
-                    // 处理图片URL，避免使用Base64编码
+                    // 增强的图片URL处理逻辑
                     let imageUrl = link.image;
-                    if (imageUrl && imageUrl.startsWith('data:')) {
+                    
+                    // 验证图片URL
+                    if (!imageUrl || imageUrl.trim() === '') {
                         imageUrl = 'https://via.placeholder.com/250x150?text=No+Preview';
-                    } else if (!imageUrl) {
-                        imageUrl = 'https://via.placeholder.com/250x150?text=No+Preview';
+                    } else if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://') && !imageUrl.startsWith('data:')) {
+                        // 不是有效的HTTP(S) URL或Base64，添加协议
+                        imageUrl = 'https://' + imageUrl;
                     }
                     
                     linkItem.innerHTML = `
                         <div class="link-preview">
-                            <img src="${imageUrl}" alt="${link.name}" onerror="this.src='https://via.placeholder.com/250x150?text=No+Preview'">
+                            <img src="${imageUrl}" 
+                                 alt="${link.name}" 
+                                 onerror="handleImageError(this)"
+                                 onload="handleImageLoad(this)"
+                                 loading="lazy">
                         </div>
                         <div class="link-info">
                             <h3>${link.name}</h3>
@@ -735,11 +840,44 @@
             }
         }
 
+        // Base64图片预览功能
+        function setupImagePreview() {
+            const base64Input = document.getElementById('link-image-base64');
+            const previewContainer = document.getElementById('image-preview');
+            const previewImg = document.getElementById('preview-img');
+            
+            base64Input.addEventListener('input', function() {
+                const inputValue = this.value.trim();
+                
+                if (!inputValue) {
+                    previewContainer.style.display = 'none';
+                    return;
+                }
+                
+                // 验证是否为有效的图片数据
+                if (inputValue.startsWith('data:image/') || inputValue.startsWith('http://') || inputValue.startsWith('https://')) {
+                    previewImg.src = inputValue;
+                    previewContainer.style.display = 'block';
+                    
+                    previewImg.onerror = function() {
+                        previewContainer.style.display = 'none';
+                    };
+                    
+                    previewImg.onload = function() {
+                        previewContainer.style.display = 'block';
+                    };
+                } else {
+                    previewContainer.style.display = 'none';
+                }
+            });
+        }
+
         // 添加新链接
         document.getElementById('add-link-btn').addEventListener('click', async () => {
             const name = document.getElementById('link-name').value.trim();
             const url = document.getElementById('link-url').value.trim();
-            const image = document.getElementById('link-image').value.trim();
+            const imageUrl = document.getElementById('link-image').value.trim();
+            const base64Image = document.getElementById('link-image-base64').value.trim();
             
             if (!name || !url) {
                 alert('请至少填写链接名称和URL');
@@ -751,6 +889,9 @@
                 alert('URL必须以http://或https://开头');
                 return;
             }
+            
+            // 优先使用Base64图片，如果没有则使用URL
+            const image = base64Image || imageUrl;
             
             try {
                 const response = await fetch('/api/links', {
@@ -766,6 +907,8 @@
                     document.getElementById('link-name').value = '';
                     document.getElementById('link-url').value = '';
                     document.getElementById('link-image').value = '';
+                    document.getElementById('link-image-base64').value = '';
+                    document.getElementById('image-preview').style.display = 'none';
                     
                     // 刷新链接列表
                     loadAdminLinks();
@@ -800,10 +943,24 @@
             }
         };
 
+        // 图片错误处理函数
+        function handleImageError(img) {
+            console.warn('图片加载失败:', img.src);
+            img.src = 'https://via.placeholder.com/250x150?text=Image+Error';
+            img.alt = '图片加载失败';
+        }
+
+        // 图片加载成功处理函数
+        function handleImageLoad(img) {
+            console.log('图片加载成功:', img.src);
+            // 可以在这里添加加载动画或其他视觉效果
+        }
+
         // 初始化
         function init() {
             createStars();
             loadLinks();
+            setupImagePreview();
         }
 
         // 页面加载完成后初始化

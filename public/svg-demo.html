@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG 图片使用演示 - WanxingApp</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+            color: #e0e0ff;
+            padding: 40px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            color: #00d4ff;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        h2 {
+            color: #39ff14;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        .svg-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .svg-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .svg-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+        
+        .svg-item img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.3));
+        }
+        
+        .code-block {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .code-block .comment {
+            color: #6a8;
+        }
+        
+        .code-block .string {
+            color: #ce9178;
+        }
+        
+        .code-block .keyword {
+            color: #569cd6;
+        }
+        
+        .warning {
+            background: rgba(255, 165, 0, 0.1);
+            border-left: 4px solid #ffa500;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .success {
+            background: rgba(57, 255, 20, 0.1);
+            border-left: 4px solid #39ff14;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .step {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 4px solid #00d4ff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #00d4ff;
+            color: #000;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .url-input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #e0e0ff;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        
+        .copy-btn {
+            background: linear-gradient(45deg, #00d4ff, #39ff14);
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 SVG 图片使用演示</h1>
+        
+        <div class="warning">
+            <strong>⚠️ 重要提醒：</strong> 系统已禁用 base64 编码图片，请使用以下外部链接方式添加图片。
+        </div>
+        
+        <h2>📋 可用的 SVG 文件</h2>
+        
+        <div class="svg-showcase">
+            <div class="svg-item">
+                <img src="/images/wanxing-logo.svg" alt="万星Logo - 原始橙色">
+                <h3>原始橙色版本</h3>
+                <p>保持您的品牌原始配色</p>
+                <div class="code-block">
+                    <span class="string">/images/wanxing-logo.svg</span>
+                </div>
+            </div>
+            
+            <div class="svg-item">
+                <img src="/images/wanxing-logo-tech.svg" alt="万星Logo - 科技风格">
+                <h3>科技风格版本</h3>
+                <p>适配系统的未来科技风格</p>
+                <div class="code-block">
+                    <span class="string">/images/wanxing-logo-tech.svg</span>
+                </div>
+            </div>
+        </div>
+        
+        <h2>🎯 如何使用</h2>
+        
+        <div class="step">
+            <span class="step-number">1</span>
+            <strong>选择图片链接</strong>
+            <p>从上方选择一个SVG文件，复制对应的链接：</p>
+            <input type="text" class="url-input" value="/images/wanxing-logo-tech.svg" readonly>
+            <button class="copy-btn" onclick="copyToClipboard('/images/wanxing-logo-tech.svg')">复制链接</button>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">2</span>
+            <strong>在管理员界面添加</strong>
+            <p>登录管理员后台，在"预览图URL"输入框中粘贴链接：</p>
+            <div class="code-block">
+                <span class="comment">// 管理员界面 -> 添加新链接</span>
+                <br>
+                <span class="keyword">链接名称:</span> <span class="string">万星科技</span>
+                <br>
+                <span class="keyword">链接URL:</span> <span class="string">https://wanxing.com</span>
+                <br>
+                <span class="keyword">预览图URL:</span> <span class="string">/images/wanxing-logo-tech.svg</span>
+            </div>
+        </div>
+        
+        <div class="step">
+            <span class="step-number">3</span>
+            <strong>验证效果</strong>
+            <p>返回主界面查看效果，SVG图片会自动适应卡片大小并保持高清质量。</p>
+        </div>
+        
+        <h2>🔧 高级用法</h2>
+        
+        <div class="success">
+            <strong>✅ 推荐方案：</strong> 使用科技风格版本 (/images/wanxing-logo-tech.svg) 能完美融入系统的未来科技主题。
+        </div>
+        
+        <h3>自定义颜色版本</h3>
+        <p>如果您需要其他颜色版本，可以基于以下模板创建：</p>
+        
+        <div class="code-block">
+            <span class="comment"><!-- 将 #00d4ff 替换为您想要的颜色 --></span>
+            <br>
+            <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 932.2 332'>
+            <br>
+              <g fill='<span class="keyword">#00d4ff</span>'>
+            <br>
+                <path d='M379.5 62.2v42.7h170.7V233h-128v-85.4h-42.7v128.1h213.4V62.2zM899.3 62.3 827 129l-72.9-66.7H721v213.3h42.4V124.5l63.6 58.4 62.8-58.2v150.9h42.4V62.3zM635.5 62.4h42.8v213.3h-42.8z'/>
+            <br>
+              </g>
+            <br>
+              <g fill='<span class="keyword">#39ff14</span>'>
+            <br>
+                <path d='m128.843 165.938 32.173-32.173 32.173 32.173-32.173 32.174z'/>
+            <br>
+                <path d='m161 5-32.2 32.2L257.7 166 161 262.6 64.4 166l64.4-64.4-32.2-32.2L0 166l161 161 161.1-161z'/>
+            <br>
+              </g>
+            <br>
+            </svg>
+        </div>
+        
+        <h2>🌐 外部图片服务</h2>
+        
+        <p>如果您需要托管其他图片，可以使用以下免费服务：</p>
+        <ul style="margin: 20px 0; padding-left: 30px;">
+            <li><strong>Imgur:</strong> https://imgur.com - 免费图片托管</li>
+            <li><strong>GitHub:</strong> 上传到仓库，使用 raw.githubusercontent.com 链接</li>
+            <li><strong>CDN服务:</strong> jsDelivr, cdnjs 等</li>
+            <li><strong>占位图:</strong> https://via.placeholder.com - 快速生成占位图</li>
+        </ul>
+        
+        <div class="warning">
+            <strong>💡 提示：</strong> 避免使用 base64 编码，优先使用外部链接以获得更好的性能和可维护性。
+        </div>
+    </div>
+    
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '已复制！';
+                btn.style.background = '#39ff14';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = 'linear-gradient(45deg, #00d4ff, #39ff14)';
+                }, 2000);
+            }).catch(err => {
+                alert('复制失败，请手动复制');
+            });
+        }
+        
+        // 为所有复制按钮添加功能
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const text = this.previousElementSibling.value || this.getAttribute('data-clipboard-text');
+                copyToClipboard(text);
+            });
+        });
+    </script>
+</body>
+</html>

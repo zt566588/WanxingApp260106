@@ -29,7 +29,7 @@
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = "default-src 'self' 'unsafe-inline' https: data:; img-src 'self' https: data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+    Content-Security-Policy = "default-src 'self' 'unsafe-inline' https: data:; img-src 'self' https: data: http: *.placeholder.com *.imgur.com *.sm.ms *.aliyuncs.com *.qpic.cn *.baidu.com *.google.com *.googleusercontent.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
 
 # API端点的特殊配置
 [[headers]]

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片加载测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .image-test {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .image-test img {
+            max-width: 200px;
+            max-height: 150px;
+            display: block;
+            margin: 10px auto;
+        }
+        .image-test.success {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .image-test.error {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        .status {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .success-text { color: #28a745; }
+        .error-text { color: #dc3545; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .console-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>图片加载测试工具</h1>
+    
+    <div class="test-section">
+        <h2>测试各种图片URL</h2>
+        <p>点击按钮测试不同类型的图片URL是否能正常加载：</p>
+        <button onclick="testAllImages()">测试所有图片</button>
+        <button onclick="clearResults()">清除结果</button>
+        <button onclick="testCSPHeaders()">测试CSP头</button>
+        
+        <div id="image-tests"></div>
+        <div id="console-output" class="console-output" style="display:none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>手动测试图片URL</h2>
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="custom-url" placeholder="输入图片URL" style="width: 70%; padding: 8px; margin-right: 10px;">
+            <button onclick="testCustomImage()">测试自定义URL</button>
+        </div>
+        <div id="custom-test-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>网络请求测试</h2>
+        <button onclick="testNetworkRequests()">测试网络请求</button>
+        <div id="network-results"></div>
+    </div>
+
+    <script>
+        // 测试图片URL列表
+        const testImages = [
+            {
+                name: '占位图服务',
+                url: 'https://via.placeholder.com/250x150?text=Test+Image',
+                description: 'via.placeholder.com - 常用占位图服务'
+            },
+            {
+                name: 'Unsplash随机图片',
+                url: 'https://source.unsplash.com/random/250x150',
+                description: 'source.unsplash.com - 高质量随机图片'
+            },
+            {
+                name: 'Picsum随机图片',
+                url: 'https://picsum.photos/250/150',
+                description: 'picsum.photos - 另一个随机图片服务'
+            },
+            {
+                name: 'Base64图片 (应该失败)',
+                url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==',
+                description: 'Base64编码图片 - 应该被系统阻止'
+            },
+            {
+                name: 'HTTP图片 (非HTTPS)',
+                url: 'http://via.placeholder.com/250x150?text=HTTP+Test',
+                description: 'HTTP协议图片 - 可能被浏览器阻止'
+            },
+            {
+                name: '无效域名',
+                url: 'https://invalid-domain-12345.com/image.jpg',
+                description: '不存在的域名 - 应该加载失败'
+            },
+            {
+                name: '本地相对路径',
+                url: '/images/test.jpg',
+                description: '相对路径 - 需要本地文件'
+            }
+        ];
+
+        function logToConsole(message) {
+            const consoleDiv = document.getElementById('console-output');
+            consoleDiv.style.display = 'block';
+            
+            const timestamp = new Date().toISOString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            
+            consoleDiv.textContent += logEntry;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            
+            // 同时输出到浏览器控制台
+            console.log(message);
+        }
+
+        function testAllImages() {
+            const container = document.getElementById('image-tests');
+            container.innerHTML = '';
+            
+            logToConsole('开始测试所有图片URL...');
+            
+            testImages.forEach((imageTest, index) => {
+                const testDiv = document.createElement('div');
+                testDiv.className = 'image-test';
+                testDiv.innerHTML = `
+                    <h4>${imageTest.name}</h4>
+                    <p>${imageTest.description}</p>
+                    <img src="" alt="测试图片" id="img-${index}">
+                    <div class="status" id="status-${index}">加载中...</div>
+                `;
+                container.appendChild(testDiv);
+                
+                testSingleImage(imageTest.url, index, imageTest.name);
+            });
+        }
+
+        function testSingleImage(url, index, name) {
+            const img = document.getElementById(`img-${index}`);
+            const status = document.getElementById(`status-${index}`);
+            const testDiv = img.closest('.image-test');
+            
+            img.onload = function() {
+                status.innerHTML = '<span class="success-text">✅ 加载成功</span>';
+                status.className = 'status success-text';
+                testDiv.className = 'image-test success';
+                logToConsole(`✅ ${name}: 图片加载成功 - ${url}`);
+            };
+            
+            img.onerror = function() {
+                status.innerHTML = '<span class="error-text">❌ 加载失败</span>';
+                status.className = 'status error-text';
+                testDiv.className = 'image-test error';
+                logToConsole(`❌ ${name}: 图片加载失败 - ${url}`);
+            };
+            
+            // 设置图片源
+            img.src = url;
+            
+            // 添加额外的错误处理
+            img.addEventListener('error', (e) => {
+                console.error(`图片错误事件: ${name}`, e);
+                logToConsole(`图片错误事件: ${name} - ${e.type}`);
+            });
+        }
+
+        function testCustomImage() {
+            const url = document.getElementById('custom-url').value.trim();

@@ -1,6 +1,6 @@
 [build]
-  # 构建命令 - 由于这是一个静态网站，我们只需要确保依赖安装
-  command = "npm install"
+  # 构建命令 - 复制API函数到正确的Netlify Functions目录
+  command = "mkdir -p netlify/functions && cp src/api/*.js netlify/functions/ && npm install"
   
   # 发布目录 - 静态文件所在目录
   publish = "public"
@@ -29,7 +29,7 @@
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = "default-src 'self' 'unsafe-inline' https: data:; img-src 'self' https: data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+    Content-Security-Policy = "default-src 'self' 'unsafe-inline' https: data:; img-src 'self' https: data: *.imgur.com *.placeholder.com *.via.placeholder.com *.githubusercontent.com *.sm.ms *.aliyuncs.com *.qpic.cn *.baidu.com *.google.com *.googleusercontent.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
 
 # API端点的特殊配置
 [[headers]]
