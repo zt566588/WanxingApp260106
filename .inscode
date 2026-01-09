@@ -1,0 +1,4 @@
+run = "cd src && node server.js"
+is_html = false
+is_resident = true
+is_gui = false
